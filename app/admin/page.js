@@ -62,7 +62,7 @@ export default function Admin() {
         borderRadius:18
       }}>
         <h1 style={{fontSize:36, margin:0}}>Iaiá</h1>
-        <p>Painel administrativo de avaliações</p>
+        <p>Painel administrativo de avaliações Iaiá</p>
       </header>
 
       {error && <p style={{color:"red"}}>{error}</p>}
