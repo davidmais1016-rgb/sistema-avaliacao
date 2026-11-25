@@ -3,13 +3,13 @@
 
 import { useState } from "react";
 
-const perguntas = [
-  { id: "pizza", titulo: "Como estava sua pizza?", subtitulo: "Sua experiência com nosso principal produto", opcoes: ["Péssima", "Ruim", "Regular", "Muito boa", "Perfeita"] },
-  { id: "massa", titulo: "O que achou da nossa massa?", subtitulo: "Textura, leveza e ponto de assamento", opcoes: ["Péssima", "Ruim", "Regular", "Muito boa", "Perfeita"] },
-  { id: "recheio", titulo: "E o recheio?", subtitulo: "Quantidade e qualidade dos ingredientes", opcoes: ["Péssimo", "Ruim", "Regular", "Muito bom", "Excelente"] },
-  { id: "sabor", titulo: "Como estava o sabor?", subtitulo: "Queremos saber se conquistamos seu paladar", opcoes: ["Péssimo", "Ruim", "Regular", "Muito bom", "Excelente"] },
-  { id: "atendimento", titulo: "Como foi nosso atendimento?", subtitulo: "A atenção e cordialidade da nossa equipe", opcoes: ["Péssimo", "Ruim", "Regular", "Muito bom", "Excelente"] },
-  { id: "agilidade", titulo: "Como foi o tempo de espera?", subtitulo: "A rapidez na preparação e entrega", opcoes: ["Muito demorado", "Demorado", "Normal", "Rápido", "Muito rápido"] }
+const criterios = [
+  ["pizza", "Experiência com a pizza", "O conjunto da sua experiência"],
+  ["massa", "Massa artesanal", "Textura, leveza e assamento"],
+  ["recheio", "Recheio e ingredientes", "Qualidade e generosidade"],
+  ["sabor", "Sabor", "O sabor que fica na memória"],
+  ["atendimento", "Nosso atendimento", "A atenção da nossa equipe"],
+  ["agilidade", "Tempo de espera", "Agilidade no preparo e entrega"]
 ];
 
 const sabores = [
@@ -27,368 +27,563 @@ export default function Home() {
   const [etapa, setEtapa] = useState(0);
   const [notas, setNotas] = useState({});
   const [sabor, setSabor] = useState("");
-  const [comentario, setComentario] = useState("");
   const [nome, setNome] = useState("");
+  const [comentario, setComentario] = useState("");
   const [voltaria, setVoltaria] = useState("");
   const [enviado, setEnviado] = useState(false);
 
   function avancar() {
-    if (etapa === 1 && perguntas.some(p => !notas[p.id])) {
-      alert("Por favor, avalie todos os itens.");
+    if (etapa === 0 && !sabor) {
+      alert("Selecione o sabor da pizza.");
+      return;
+    }
+    if (etapa === 1 && criterios.some(c => !notas[c[0]])) {
+      alert("Avalie todos os itens antes de continuar.");
       return;
     }
     setEtapa(etapa + 1);
   }
 
   function finalizar() {
-    if (!sabor || !voltaria) {
-      alert("Selecione o sabor e responda se voltaria.");
+    if (!voltaria) {
+      alert("Responda se voltaria à Iaiá.");
       return;
     }
     setEnviado(true);
   }
 
-  const progresso = etapa === 0 ? 0 : etapa === 1 ? 33 : etapa === 2 ? 66 : 100;
-
   return (
-    <main className="pagina">
-      <header className="topo">
-        <div className="marca">
-          <div className="logo">Iaiá<span>.</span></div>
-          <div className="marca-legenda">PIZZARIA ARTESANAL</div>
+    <main className="experience">
+      <div className="ornamento ornamento1" />
+      <div className="ornamento ornamento2" />
+
+      <header className="header">
+        <div>
+          <div className="brand">Iaiá<span>.</span></div>
+          <div className="brand-sub">PIZZARIA ARTESANAL</div>
         </div>
-        <div className="selo-topo">EXPERIÊNCIA DO CLIENTE</div>
+        <div className="header-right">
+          <span>UMA EXPERIÊNCIA ESPECIAL</span>
+          <div className="gold-line" />
+        </div>
       </header>
 
-      <section className="conteudo">
+      <section className="main-content">
         {!enviado ? (
           <>
-            <div className="cartao">
-              <div className="cabecalho-cartao">
-                <span className="etiqueta">SUA OPINIÃO É ESPECIAL</span>
-                <h1>Uma boa experiência<br />merece ser <span>compartilhada.</span></h1>
-                <p>Ajude a Iaiá a ficar ainda melhor. Sua opinião faz toda a diferença!</p>
+            <div className="intro">
+              <div className="eyebrow">
+                <span>✦</span> IAIÁ EXPERIENCE <span>✦</span>
+              </div>
+              <h1>
+                Cada detalhe<br />
+                tem <i>sabor.</i>
+              </h1>
+              <p>
+                Queremos conhecer sua experiência.
+                Sua opinião inspira tudo aquilo que fazemos.
+              </p>
+            </div>
+
+            <div className="survey">
+              <div className="survey-top">
+                <div>
+                  <span className="muted-label">SUA AVALIAÇÃO</span>
+                  <h2>
+                    {etapa === 0 && "Vamos nos conhecer?"}
+                    {etapa === 1 && "Conte como foi"}
+                    {etapa === 2 && "Sua opinião importa"}
+                  </h2>
+                </div>
+                <div className="step-number">
+                  <strong>0{etapa + 1}</strong>
+                  <span>/ 03</span>
+                </div>
               </div>
 
-              <div className="progresso-info">
-                <span>ETAPA {etapa + 1} DE 3</span>
-                <span>{progresso}% concluído</span>
-              </div>
-              <div className="barra">
-                <div style={{ width: `${progresso}%` }} />
+              <div className="progress">
+                <div style={{ width: `${(etapa + 1) * 33.333}%` }} />
               </div>
 
               {etapa === 0 && (
-                <div className="etapa">
-                  <div className="icone-etapa">01</div>
-                  <h2>Vamos começar?</h2>
-                  <p className="subtitulo">Queremos conhecer um pouquinho da sua experiência com a Iaiá.</p>
+                <div className="form-content">
+                  <div className="section-label">01 — SUA EXPERIÊNCIA</div>
+                  <h3>Qual foi sua escolha?</h3>
+                  <p className="help">Queremos saber qual sabor passou pela sua mesa.</p>
 
-                  <div className="campo">
-                    <label>Qual pizza você experimentou?</label>
-                    <select value={sabor} onChange={e => setSabor(e.target.value)}>
-                      <option value="">Escolha o sabor</option>
-                      {sabores.map(s => <option key={s}>{s}</option>)}
-                    </select>
+                  <div className="flavors">
+                    {sabores.map((s, i) => (
+                      <button
+                        key={s}
+                        className={sabor === s ? "flavor active" : "flavor"}
+                        onClick={() => setSabor(s)}
+                      >
+                        <span className="flavor-number">0{i + 1}</span>
+                        {s}
+                        <span className="check">{sabor === s ? "✓" : "＋"}</span>
+                      </button>
+                    ))}
                   </div>
 
-                  <div className="campo">
-                    <label>Seu nome <small>(opcional)</small></label>
-                    <input value={nome} onChange={e => setNome(e.target.value)} placeholder="Digite seu nome" />
+                  <div className="field">
+                    <label>Como podemos chamar você?</label>
+                    <input
+                      value={nome}
+                      onChange={e => setNome(e.target.value)}
+                      placeholder="Seu nome (opcional)"
+                    />
                   </div>
 
-                  <button className="principal" onClick={() => {
-                    if (!sabor) {
-                      alert("Selecione o sabor da pizza.");
-                      return;
-                    }
-                    setEtapa(1);
-                  }}>
-                    COMEÇAR A AVALIAÇÃO <span>→</span>
+                  <button className="next" onClick={avancar}>
+                    CONTINUAR <span>→</span>
                   </button>
                 </div>
               )}
 
               {etapa === 1 && (
-                <div className="etapa">
-                  <div className="icone-etapa">02</div>
-                  <h2>Vamos falar da pizza!</h2>
-                  <p className="subtitulo">Avalie cada detalhe. Sua sinceridade nos ajuda a manter a qualidade.</p>
+                <div className="form-content">
+                  <div className="section-label">02 — NOSSA QUALIDADE</div>
+                  <h3>Seu olhar faz a diferença.</h3>
+                  <p className="help">Toque nas estrelas para avaliar cada experiência.</p>
 
-                  {perguntas.map((p, index) => (
-                    <div className="pergunta" key={p.id}>
-                      <div className="numero">{String(index + 1).padStart(2, "0")}</div>
-                      <div className="pergunta-conteudo">
-                        <h3>{p.titulo}</h3>
-                        <p>{p.subtitulo}</p>
-                        <div className="estrelas">
-                          {[1, 2, 3, 4, 5].map(n => (
-                            <button
-                              key={n}
-                              type="button"
-                              aria-label={`Nota ${n}`}
-                              className={n <= (notas[p.id] || 0) ? "selecionada" : ""}
-                              onClick={() => setNotas({ ...notas, [p.id]: n })}
-                            >★</button>
-                          ))}
+                  {criterios.map((c, index) => (
+                    <div className="rating" key={c[0]}>
+                      <div className="rating-heading">
+                        <div>
+                          <span className="rating-index">0{index + 1}</span>
+                          <strong>{c[1]}</strong>
+                          <p>{c[2]}</p>
                         </div>
-                        <small className="descricao-nota">
-                          {notas[p.id] ? p.opcoes[notas[p.id] - 1] : "Selecione uma nota"}
-                        </small>
+                        <span className="rating-value">
+                          {notas[c[0]] ? `${notas[c[0]]}/5` : "—"}
+                        </span>
+                      </div>
+                      <div className="stars">
+                        {[1,2,3,4,5].map(n => (
+                          <button
+                            key={n}
+                            className={n <= (notas[c[0]] || 0) ? "star chosen" : "star"}
+                            onClick={() => setNotas({ ...notas, [c[0]]: n })}
+                            aria-label={`Nota ${n}`}
+                          >★</button>
+                        ))}
                       </div>
                     </div>
                   ))}
 
-                  <div className="botoes">
-                    <button className="secundario" onClick={() => setEtapa(0)}>VOLTAR</button>
-                    <button className="principal" onClick={avancar}>CONTINUAR →</button>
+                  <div className="buttons">
+                    <button className="back" onClick={() => setEtapa(0)}>← VOLTAR</button>
+                    <button className="next" onClick={avancar}>CONTINUAR →</button>
                   </div>
                 </div>
               )}
 
               {etapa === 2 && (
-                <div className="etapa">
-                  <div className="icone-etapa">03</div>
-                  <h2>Conte mais para nós!</h2>
-                  <p className="subtitulo">Queremos entender o que podemos fazer para surpreender você.</p>
+                <div className="form-content">
+                  <div className="section-label">03 — SUA VOZ</div>
+                  <h3>Queremos ouvir você.</h3>
+                  <p className="help">Uma sugestão pode fazer nossa próxima experiência ainda melhor.</p>
 
-                  <div className="campo">
-                    <label>Você voltaria a comprar na Iaiá?</label>
-                    <div className="escolhas">
+                  <div className="field">
+                    <label>Você voltaria à Iaiá?</label>
+                    <div className="choices">
                       {["Com certeza!", "Talvez", "Não"].map(v => (
-                        <button key={v} onClick={() => setVoltaria(v)}
-                          className={voltaria === v ? "escolhida" : ""}>{v}</button>
+                        <button
+                          key={v}
+                          className={voltaria === v ? "choice selected" : "choice"}
+                          onClick={() => setVoltaria(v)}
+                        >{v}</button>
                       ))}
                     </div>
                   </div>
 
-                  <div className="campo">
-                    <label>Deixe seu comentário ou sugestão</label>
-                    <textarea rows={5} maxLength={1000}
+                  <div className="field">
+                    <label>Deixe uma mensagem para nós</label>
+                    <textarea
+                      rows={5}
+                      maxLength={1000}
                       value={comentario}
                       onChange={e => setComentario(e.target.value)}
-                      placeholder="O que você mais gostou? Tem alguma sugestão? Queremos ouvir você..." />
-                    <small className="contador">{comentario.length}/1000</small>
+                      placeholder="O que você amou? O que podemos melhorar?"
+                    />
+                    <span className="counter">{comentario.length}/1000</span>
                   </div>
 
-                  <div className="botoes">
-                    <button className="secundario" onClick={() => setEtapa(1)}>VOLTAR</button>
-                    <button className="principal" onClick={finalizar}>ENVIAR AVALIAÇÃO →</button>
+                  <div className="buttons">
+                    <button className="back" onClick={() => setEtapa(1)}>← VOLTAR</button>
+                    <button className="next" onClick={finalizar}>FINALIZAR →</button>
                   </div>
                 </div>
               )}
             </div>
-            <div className="seguranca">♥ &nbsp; Obrigado por escolher a Iaiá Pizzaria Artesanal</div>
+
+            <div className="bottom-note">
+              <span>✦</span> Obrigado por fazer parte da nossa história.
+            </div>
           </>
         ) : (
-          <div className="cartao agradecimento">
-            <div className="selo">AVALIAÇÃO CONCLUÍDA</div>
-            <div className="simbolo">♥</div>
-            <h1>Você faz parte<br /><span>da nossa história!</span></h1>
-            <p>Obrigado{nome ? `, ${nome}` : ""}, por compartilhar sua experiência com a Iaiá. Sua opinião é muito importante para nós!</p>
-            <div className="resumo">
-              <span>Pizza avaliada</span>
-              <strong>{sabor}</strong>
-            </div>
-            <p className="mensagem-final">Será um prazer receber você novamente. ❤️</p>
+          <div className="thank-you">
+            <div className="thank-symbol">✦</div>
+            <div className="eyebrow">COM CARINHO, IAIÁ</div>
+            <h1>Obrigado{nome ? `, ${nome}` : ""}.<br /><i>Você é especial.</i></h1>
+            <p>
+              Sua opinião foi recebida nesta demonstração.
+              Será sempre um prazer receber você novamente.
+            </p>
+            <div className="thank-divider">✦</div>
+            <div className="brand">Iaiá<span>.</span></div>
+            <button className="next restart" onClick={() => {
+              setEtapa(0);
+              setNotas({});
+              setSabor("");
+              setNome("");
+              setComentario("");
+              setVoltaria("");
+              setEnviado(false);
+            }}>NOVA AVALIAÇÃO</button>
           </div>
         )}
       </section>
 
-      <footer>
-        <div className="logo-footer">Iaiá<span>.</span></div>
-        <p>PIZZARIA ARTESANAL • FEITO COM CARINHO</p>
+      <footer className="footer">
+        <span>IAIÁ PIZZARIA ARTESANAL</span>
+        <span>FEITO COM CARINHO ♥</span>
       </footer>
 
       <style jsx global>{`
         * { box-sizing: border-box; }
-        body { margin: 0; font-family: Arial, sans-serif; }
-        button, input, select, textarea { font: inherit; }
+        body { margin: 0; }
+        button, input, textarea { font-family: inherit; }
 
-        .pagina {
+        .experience {
           min-height: 100vh;
-          background: radial-gradient(ellipse at 50% 0%, #76243e 0%, transparent 55%), #350d1c;
-          padding: 25px 18px 20px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-        }
-
-        .topo {
-          width: 100%; max-width: 1050px;
-          display: flex; justify-content: space-between;
-          align-items: center; color: white;
-        }
-        .logo, .logo-footer {
-          font: bold 43px Georgia, serif;
-          letter-spacing: -2px;
-        }
-        .logo span, .logo-footer span { color: #e9bc58; }
-        .marca-legenda {
-          font-size: 9px; color: #e9c77e;
-          letter-spacing: 2px; margin-top: -2px;
-        }
-        .selo-topo {
-          color: #e9c77e; font-size: 9px;
-          letter-spacing: 2px;
-        }
-
-        .conteudo {
-          width: 100%; max-width: 650px;
-          margin: 35px auto;
-        }
-        .cartao {
-          background: #fffdf9;
-          border-radius: 22px;
-          padding: 36px 35px;
-          box-shadow: 0 25px 70px #16030c66;
-        }
-        .cabecalho-cartao { text-align: center; }
-        .etiqueta, .selo {
-          color: #a77b31; font-size: 10px;
-          letter-spacing: 2.5px; font-weight: bold;
-        }
-        h1 {
-          font: 42px/1.12 Georgia, serif;
-          color: #501329; margin: 20px 0 12px;
-        }
-        h1 span { color: #b78b3d; }
-        .cabecalho-cartao p, .subtitulo {
-          color: #827b75; line-height: 1.65;
-          font-size: 14px;
-        }
-        .progresso-info {
-          display: flex; justify-content: space-between;
-          margin-top: 32px; color: #9b8d80;
-          font-size: 10px; letter-spacing: 1px;
-        }
-        .barra {
-          background: #eee7df; height: 5px;
-          border-radius: 10px; margin: 10px 0 30px;
+          background: #3a101e;
+          color: #fff;
+          font-family: Arial, sans-serif;
+          padding: 30px 22px;
+          position: relative;
           overflow: hidden;
         }
-        .barra div {
-          height: 100%; background: #b78b3d;
-          border-radius: 10px; transition: width .3s;
+
+        .ornamento {
+          position: absolute;
+          border: 1px solid #d5b36b20;
+          border-radius: 50%;
+          pointer-events: none;
         }
-        .icone-etapa {
-          color: #b78b3d; font: bold 13px Georgia;
+        .ornamento1 {
+          width: 450px; height: 450px;
+          top: 80px; left: -300px;
+        }
+        .ornamento2 {
+          width: 650px; height: 650px;
+          bottom: -400px; right: -350px;
+        }
+
+        .header {
+          max-width: 1050px;
+          margin: auto;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          position: relative;
+          z-index: 1;
+        }
+        .brand {
+          font: bold 48px Georgia, serif;
+          letter-spacing: -3px;
+          color: #fff8ed;
+        }
+        .brand span { color: #d7b16a; }
+        .brand-sub {
+          color: #d7b16a;
+          letter-spacing: 3px;
+          font-size: 8px;
+          margin-top: -3px;
+        }
+        .header-right {
+          color: #d7b16a;
+          font-size: 9px;
+          letter-spacing: 2px;
+          text-align: right;
+        }
+        .gold-line {
+          width: 75px;
+          height: 1px;
+          background: #d7b16a;
+          margin: 10px 0 0 auto;
+        }
+
+        .main-content {
+          max-width: 650px;
+          margin: 45px auto;
+          position: relative;
+          z-index: 1;
+        }
+        .intro { text-align: center; margin-bottom: 32px; }
+        .eyebrow {
+          color: #d7b16a;
+          letter-spacing: 4px;
+          font-size: 9px;
+          font-weight: bold;
+        }
+        .intro h1, .thank-you h1 {
+          font: 57px/1.08 Georgia, serif;
+          color: #fff8ed;
+          margin: 19px 0 13px;
+        }
+        .intro h1 i, .thank-you h1 i {
+          color: #dfc18a;
+          font-weight: normal;
+        }
+        .intro p {
+          color: #d3bdba;
+          font: 14px/1.7 Georgia, serif;
+          max-width: 380px;
+          margin: auto;
+        }
+
+        .survey {
+          background: #fbf7f0;
+          color: #461625;
+          border-radius: 4px;
+          padding: 35px 38px;
+          box-shadow: 0 25px 80px #16050b70;
+        }
+        .survey-top {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .muted-label {
+          color: #ad8950;
+          font-size: 9px;
           letter-spacing: 2px;
         }
-        .etapa h2 {
-          color: #501329; font: 29px Georgia,serif;
-          margin: 9px 0;
+        .survey-top h2 {
+          font: 27px Georgia, serif;
+          margin: 8px 0;
         }
-        .campo { margin: 25px 0; }
-        .campo label {
-          display: block; color: #501329;
-          font-size: 13px; font-weight: bold;
-          margin-bottom: 10px;
+        .step-number strong {
+          color: #8d5e36;
+          font: 31px Georgia, serif;
         }
-        .campo label small { color: #9c938c; font-weight: normal; }
-        .campo input, .campo select, .campo textarea {
-          width: 100%; padding: 15px;
-          border: 1px solid #e8ded4; border-radius: 10px;
-          background: white; color: #501329;
-          outline-color: #b78b3d; font-size: 14px;
+        .step-number span {
+          color: #a99c8c;
+          font-size: 12px;
         }
-        .campo textarea { resize: vertical; line-height: 1.5; }
-        .pergunta {
-          display: flex; gap: 15px;
-          border-bottom: 1px solid #eee7df;
-          padding: 20px 0;
+        .progress {
+          background: #e9dfd2;
+          height: 2px;
+          margin: 20px 0 30px;
         }
-        .numero {
-          color: #b78b3d; font: 18px Georgia;
-          padding-top: 2px;
+        .progress div {
+          height: 2px;
+          background: #b18a4c;
+          transition: width .35s;
         }
-        .pergunta-conteudo { flex: 1; }
-        .pergunta h3 {
-          color: #501329; font-size: 14px;
-          margin: 0 0 5px;
+        .section-label {
+          color: #a27a40;
+          font-size: 9px;
+          letter-spacing: 2px;
+          font-weight: bold;
         }
-        .pergunta p {
-          color: #999088; font-size: 11px;
-          margin: 0 0 10px;
+        .form-content h3 {
+          font: 27px Georgia, serif;
+          margin: 12px 0 7px;
         }
-        .estrelas { display: flex; gap: 8px; }
-        .estrelas button {
-          border: 0; background: transparent;
-          color: #ded7ce; font-size: 30px;
-          padding: 0; cursor: pointer;
-          transition: .15s;
+        .help {
+          color: #93877b;
+          font: 13px/1.6 Georgia, serif;
+          margin-bottom: 24px;
         }
-        .estrelas button.selecionada { color: #c49a43; }
-        .estrelas button:hover { transform: scale(1.15); }
-        .descricao-nota {
-          display: block; color: #a77b31;
-          font-size: 11px; margin-top: 5px;
+
+        .flavors {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 9px;
         }
-        .escolhas { display: grid; gap: 9px; }
-        .escolhas button {
-          padding: 13px; border: 1px solid #e8ded4;
-          border-radius: 9px; background: white;
-          color: #501329; text-align: left;
+        .flavor {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          text-align: left;
+          padding: 14px 10px;
+          background: #fffdf9;
+          border: 1px solid #e9dfd3;
+          color: #522438;
+          font-size: 12px;
+          cursor: pointer;
+          transition: .2s;
+        }
+        .flavor.active {
+          border-color: #b18a4c;
+          background: #f5ecdc;
+        }
+        .flavor-number {
+          color: #b18a4c;
+          font: 12px Georgia, serif;
+        }
+        .check {
+          margin-left: auto;
+          color: #a47c40;
+        }
+
+        .field { margin: 25px 0; }
+        .field label {
+          display: block;
+          font: 16px Georgia, serif;
+          margin-bottom: 11px;
+          color: #522438;
+        }
+        .field input, .field textarea {
+          width: 100%;
+          background: #fffdf9;
+          border: 1px solid #e7ddd1;
+          padding: 15px;
+          border-radius: 2px;
+          color: #522438;
+          font-size: 13px;
+          outline-color: #b18a4c;
+        }
+        .field textarea { resize: vertical; line-height: 1.6; }
+
+        .rating {
+          padding: 19px 0;
+          border-bottom: 1px solid #e9dfd3;
+        }
+        .rating-heading {
+          display: flex;
+          justify-content: space-between;
+          gap: 10px;
+        }
+        .rating-heading strong {
+          font: 15px Georgia, serif;
+          color: #522438;
+        }
+        .rating-index {
+          color: #b18a4c;
+          font: 11px Georgia, serif;
+          margin-right: 9px;
+        }
+        .rating-heading p {
+          color: #998d81;
+          font-size: 10px;
+          margin: 6px 0 0 27px;
+        }
+        .rating-value { color: #a17a42; font: 13px Georgia, serif; }
+        .stars { display: flex; gap: 9px; margin: 12px 0 0 25px; }
+        .star {
+          color: #ded4c6;
+          background: none;
+          border: 0;
+          font-size: 29px;
+          padding: 0;
+          cursor: pointer;
+          transition: transform .2s, color .2s;
+        }
+        .star.chosen { color: #bd944d; }
+        .star:hover { transform: scale(1.18); }
+
+        .choices { display: flex; gap: 8px; flex-wrap: wrap; }
+        .choice {
+          flex: 1;
+          min-width: 90px;
+          padding: 13px 8px;
+          border: 1px solid #e7ddd1;
+          color: #522438;
+          background: #fffdf9;
+          cursor: pointer;
+          font-size: 12px;
+        }
+        .choice.selected {
+          background: #f1e7d5;
+          border-color: #b18a4c;
+        }
+        .counter {
+          display: block;
+          text-align: right;
+          color: #a99c8c;
+          font-size: 10px;
+          margin-top: 7px;
+        }
+
+        .buttons { display: flex; gap: 10px; margin-top: 25px; }
+        .next, .back {
+          padding: 16px 18px;
+          font-size: 10px;
+          letter-spacing: 1.5px;
           cursor: pointer;
         }
-        .escolhas button.escolhida {
-          border-color: #b78b3d;
-          background: #fff8e9; font-weight: bold;
+        .next {
+          flex: 1;
+          border: 0;
+          color: white;
+          background: #52192e;
+          transition: .2s;
         }
-        .contador {
-          display: block; text-align: right;
-          color: #999; font-size: 10px; margin-top: 6px;
+        .next:hover { background: #7a3049; }
+        .back {
+          border: 1px solid #d9c9b6;
+          background: transparent;
+          color: #6a3444;
         }
-        .botoes {
-          display: flex; gap: 12px; margin-top: 25px;
-        }
-        .principal, .secundario {
-          padding: 16px 18px; border-radius: 9px;
-          cursor: pointer; font-size: 11px;
-          font-weight: bold; letter-spacing: 1px;
-        }
-        .principal {
-          flex: 1; background: #64182f;
-          color: white; border: 0;
-        }
-        .principal:hover { background: #812b47; }
-        .principal span { float: right; }
-        .secundario {
-          background: transparent; color: #64182f;
-          border: 1px solid #d8c8ba;
-        }
-        .seguranca {
-          text-align: center; color: #e9c77e;
-          font-size: 11px; margin-top: 20px;
-        }
-        .agradecimento { text-align: center; padding: 55px 30px; }
-        .simbolo { color: #c49a43; font-size: 65px; margin-top: 25px; }
-        .agradecimento p {
-          color: #81766e; line-height: 1.7;
-          font-size: 14px;
-        }
-        .resumo {
-          background: #f6efe7; border-radius: 12px;
-          padding: 18px; margin: 25px 0;
-          display: grid; gap: 8px;
-        }
-        .resumo span { color: #91857a; font-size: 11px; }
-        .resumo strong { color: #501329; }
-        .mensagem-final { color: #a77b31 !important; }
-        footer { text-align: center; color: #e9c77e; }
-        .logo-footer { font-size: 29px; }
-        footer p { font-size: 9px; letter-spacing: 2px; }
 
-        @media(max-width: 480px) {
-          .cartao { padding: 28px 19px; }
-          h1 { font-size: 34px; }
-          .topo { gap: 10px; }
-          .selo-topo { font-size: 8px; }
-          .pergunta { gap: 9px; }
-          .estrelas { gap: 5px; }
-          .estrelas button { font-size: 28px; }
-          .botoes { gap: 7px; }
-          .principal, .secundario { padding: 15px 10px; }
+        .bottom-note {
+          text-align: center;
+          color: #dfc18a;
+          font: italic 13px Georgia, serif;
+          margin-top: 25px;
+        }
+        .bottom-note span { color: #d7b16a; }
+
+        .thank-you {
+          background: #fbf7f0;
+          color: #461625;
+          text-align: center;
+          padding: 65px 30px;
+          box-shadow: 0 25px 80px #16050b70;
+        }
+        .thank-symbol {
+          color: #bd944d;
+          font-size: 65px;
+          margin: 30px;
+        }
+        .thank-you h1 { color: #522438; font-size: 43px; }
+        .thank-you p {
+          color: #93877b;
+          font: 15px/1.8 Georgia, serif;
+          max-width: 380px;
+          margin: 20px auto;
+        }
+        .thank-divider { color: #bd944d; margin: 35px; }
+        .thank-you .brand { color: #522438; font-size: 42px; }
+        .restart { display: block; width: 100%; margin-top: 30px; }
+
+        .footer {
+          max-width: 1050px;
+          width: 100%;
+          margin: auto auto 0;
+          display: flex;
+          justify-content: space-between;
+          color: #cdb17d;
+          font-size: 8px;
+          letter-spacing: 2px;
+          position: relative;
+          z-index: 1;
+        }
+
+        @media(max-width: 520px) {
+          .experience { padding: 22px 13px; }
+          .brand { font-size: 40px; }
+          .header-right { font-size: 7px; letter-spacing: 1px; }
+          .main-content { margin: 38px auto; }
+          .intro h1 { font-size: 48px; }
+          .survey { padding: 27px 19px; }
+          .survey-top h2 { font-size: 23px; }
+          .form-content h3 { font-size: 24px; }
+          .flavors { grid-template-columns: 1fr; }
+          .footer { font-size: 7px; letter-spacing: 1px; }
         }
       `}</style>
     </main>
