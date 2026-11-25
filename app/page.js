@@ -3,16 +3,30 @@
 
 import { useState } from "react";
 
-const opcoes = [
-  { nota: 1, emoji: "😞", texto: "Péssimo" },
-  { nota: 2, emoji: "😕", texto: "Ruim" },
-  { nota: 3, emoji: "😐", texto: "Regular" },
-  { nota: 4, emoji: "😊", texto: "Muito bom" },
-  { nota: 5, emoji: "😍", texto: "Excelente" }
-];
-
 export default function Home() {
-  const [nota, setNota] = useState(0);
+  const [pizza, setPizza] = useState(0);
+  const [qualidade, setQualidade] = useState(0);
+  const [atendimento, setAtendimento] = useState(0);
+  const [ambiente, setAmbiente] = useState(0);
+  const [sabor, setSabor] = useState("");
+  const [comentario, setComentario] = useState("");
+  const [nome, setNome] = useState("");
+  const [enviado, setEnviado] = useState(false);
+
+  const perguntas = [
+    { titulo: "Como você avalia nossas pizzas?", valor: pizza, alterar: setPizza },
+    { titulo: "Qualidade dos ingredientes e recheio", valor: qualidade, alterar: setQualidade },
+    { titulo: "Como foi nosso atendimento?", valor: atendimento, alterar: setAtendimento },
+    { titulo: "Como avalia nosso ambiente?", valor: ambiente, alterar: setAmbiente }
+  ];
+
+  function enviar() {
+    if (!pizza || !qualidade || !atendimento || !ambiente) {
+      alert("Por favor, responda todas as avaliações.");
+      return;
+    }
+    setEnviado(true);
+  }
 
   return (
     <main className="pagina">
@@ -22,90 +36,119 @@ export default function Home() {
       </header>
 
       <section className="painel">
-        {!nota ? (
+        {!enviado ? (
           <>
-            <div className="selo">SUA OPINIÃO É IMPORTANTE</div>
+            <div className="selo">SUA OPINIÃO TEM VALOR</div>
 
-            <h1>
-              Queremos saber
-              <br />
-              como foi sua
-              <br />
-              <span>experiência!</span>
-            </h1>
-
+            <h1>Queremos ouvir <span>você!</span></h1>
             <p className="descricao">
-              Sua avaliação nos ajuda a melhorar
-              cada vez mais. Como você avalia
-              nosso atendimento?
+              Conte como foi sua experiência.
+              Sua opinião faz a Iaiá crescer.
             </p>
 
-            <div className="opcoes">
-              {opcoes.map((item) => (
-                <button
-                  key={item.nota}
-                  className="opcao"
-                  onClick={() => setNota(item.nota)}
-                >
-                  <span className="emoji">{item.emoji}</span>
-                  <span className="legenda">{item.texto}</span>
-                </button>
-              ))}
+            {perguntas.map((p, index) => (
+              <div className="pergunta" key={index}>
+                <h3>{index + 1}. {p.titulo}</h3>
+                <div className="estrelas">
+                  {[1,2,3,4,5].map(n => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => p.alterar(n)}
+                      className={n <= p.valor ? "ativa" : ""}
+                    >★</button>
+                  ))}
+                </div>
+                <small>
+                  {["","Péssimo","Ruim","Regular","Muito bom","Excelente"][p.valor]}
+                </small>
+              </div>
+            ))}
+
+            <div className="campo">
+              <label>Qual pizza você pediu?</label>
+              <select value={sabor} onChange={e => setSabor(e.target.value)}>
+                <option value="">Selecione o sabor</option>
+                <option>Margherita</option>
+                <option>Calabresa</option>
+                <option>Frango com Catupiry</option>
+                <option>Portuguesa</option>
+                <option>Outro sabor</option>
+              </select>
             </div>
 
-            <div className="rodape-painel">
-              <span className="linha"></span>
-              LEVA MENOS DE 10 SEGUNDOS
-              <span className="linha"></span>
+            <div className="campo">
+              <label>Seu nome (opcional)</label>
+              <input
+                placeholder="Como podemos chamar você?"
+                value={nome}
+                onChange={e => setNome(e.target.value)}
+              />
             </div>
+
+            <div className="campo">
+              <label>Deixe seu comentário</label>
+              <textarea
+                placeholder="O que você mais gostou? O que podemos melhorar?"
+                value={comentario}
+                onChange={e => setComentario(e.target.value)}
+                rows={4}
+              />
+            </div>
+
+            <button className="enviar" onClick={enviar}>
+              ENVIAR MINHA AVALIAÇÃO →
+            </button>
+
+            <p className="privacidade">
+              Obrigado por ajudar a Iaiá a melhorar!
+            </p>
           </>
         ) : (
-          <div className="agradecimento">
+          <div className="sucesso">
             <div className="coracao">♥</div>
             <h1>Obrigado!</h1>
             <p>
-              Sua opinião é muito especial
-              para a equipe Iaiá.
+              Sua opinião é muito importante
+              para nós. Esperamos você novamente!
             </p>
-            <div className="nota-final">
-              {opcoes.find(o => o.nota === nota)?.emoji}
-              <span>
-                {opcoes.find(o => o.nota === nota)?.texto}
-              </span>
-            </div>
+            <button className="enviar" onClick={() => {
+              setPizza(0);
+              setQualidade(0);
+              setAtendimento(0);
+              setAmbiente(0);
+              setSabor("");
+              setComentario("");
+              setNome("");
+              setEnviado(false);
+            }}>
+              NOVA AVALIAÇÃO
+            </button>
           </div>
         )}
       </section>
 
       <footer>
-        <span>IAIÁ</span>
+        <strong>IAIÁ</strong>
         <p>Feito com carinho para você ♥</p>
       </footer>
 
       <style jsx global>{`
         * { box-sizing: border-box; }
-
-        body {
-          margin: 0;
-          font-family: Arial, sans-serif;
-          background: #f5f0eb;
-        }
+        body { margin: 0; font-family: Arial, sans-serif; }
 
         .pagina {
           min-height: 100vh;
-          background:
-            radial-gradient(circle at 80% 10%, #812d46 0, transparent 35%),
-            linear-gradient(145deg, #350b1b, #68182f 65%, #3b1020);
-          padding: 35px 20px;
+          background: radial-gradient(circle at top right,#812d46,transparent 40%),linear-gradient(145deg,#350b1b,#68182f);
+          padding: 30px 16px;
           display: flex;
           flex-direction: column;
           align-items: center;
-          justify-content: space-between;
         }
 
         .topo {
           width: 100%;
-          max-width: 1000px;
+          max-width: 700px;
           display: flex;
           justify-content: space-between;
           align-items: center;
@@ -113,150 +156,133 @@ export default function Home() {
         }
 
         .logo {
-          font-family: Georgia, serif;
-          font-size: 43px;
-          font-weight: bold;
+          font: bold 43px Georgia,serif;
           letter-spacing: -2px;
         }
-
         .logo span { color: #e9bc58; }
-
-        .assinatura {
-          font-size: 10px;
-          letter-spacing: 3px;
-          color: #e9c77e;
-        }
+        .assinatura { color: #e9c77e; font-size: 9px; letter-spacing: 2px; }
 
         .painel {
           background: #fffdf9;
-          border-radius: 22px;
           width: 100%;
-          max-width: 650px;
-          padding: 48px 35px;
-          text-align: center;
+          max-width: 620px;
+          border-radius: 22px;
+          padding: 38px 30px;
+          margin: 35px 0;
           box-shadow: 0 25px 70px #21071366;
-          margin: 45px 0;
         }
 
         .selo {
           color: #a77b31;
+          text-align: center;
           font-size: 10px;
           letter-spacing: 3px;
           font-weight: bold;
         }
 
         h1 {
+          font: 42px Georgia,serif;
           color: #501329;
-          font-family: Georgia, serif;
-          font-size: clamp(36px, 7vw, 54px);
-          line-height: 1.13;
-          margin: 25px 0 15px;
+          text-align: center;
+          margin: 22px 0 10px;
         }
-
         h1 span { color: #b78b3d; }
 
         .descricao {
+          text-align: center;
           color: #77716d;
-          font-size: 16px;
-          line-height: 1.7;
-          max-width: 390px;
-          margin: 0 auto 35px;
+          line-height: 1.6;
+          margin-bottom: 30px;
         }
 
-        .opcoes {
-          display: grid;
-          grid-template-columns: repeat(5, 1fr);
-          gap: 10px;
+        .pergunta {
+          border-top: 1px solid #eee4dc;
+          padding: 19px 0;
         }
 
-        .opcao {
-          border: 1px solid #eee4dc;
-          background: white;
-          border-radius: 15px;
-          padding: 17px 5px;
-          cursor: pointer;
-          transition: .2s;
+        .pergunta h3 {
           color: #501329;
+          font-size: 15px;
+          margin: 0 0 13px;
         }
 
-        .opcao:hover {
-          border-color: #b78b3d;
-          background: #fff8e9;
-          transform: translateY(-5px);
-        }
-
-        .emoji {
-          display: block;
+        .estrelas { display: flex; gap: 10px; }
+        .estrelas button {
+          border: none;
+          background: transparent;
+          color: #ddd5cc;
           font-size: 34px;
-          margin-bottom: 10px;
+          cursor: pointer;
+          padding: 0;
         }
+        .estrelas button.ativa { color: #c49a43; }
 
-        .legenda {
+        .pergunta small {
+          color: #a77b31;
           display: block;
-          font-size: 11px;
-          font-weight: bold;
+          margin-top: 6px;
         }
 
-        .rodape-painel {
-          margin-top: 35px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 12px;
-          color: #a49a91;
-          font-size: 9px;
-          letter-spacing: 1px;
-        }
-
-        .linha {
-          height: 1px;
-          background: #e7ded5;
-          flex: 1;
-        }
-
-        .agradecimento { padding: 35px 0; }
-
-        .coracao {
-          color: #b78b3d;
-          font-size: 60px;
-        }
-
-        .agradecimento p {
-          color: #77716d;
-          line-height: 1.7;
-        }
-
-        .nota-final {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          gap: 12px;
-          margin-top: 25px;
-          font-size: 26px;
+        .campo { margin: 19px 0; }
+        .campo label {
+          display: block;
           color: #501329;
+          font-weight: bold;
+          font-size: 14px;
+          margin-bottom: 9px;
         }
+
+        .campo input, .campo select, .campo textarea {
+          width: 100%;
+          border: 1px solid #e7ded5;
+          border-radius: 10px;
+          padding: 14px;
+          font: 14px Arial;
+          color: #501329;
+          background: white;
+          outline-color: #b78b3d;
+        }
+
+        .campo textarea { resize: vertical; }
+
+        .enviar {
+          width: 100%;
+          background: #64182f;
+          color: white;
+          border: none;
+          border-radius: 10px;
+          padding: 17px;
+          font-weight: bold;
+          letter-spacing: 1px;
+          cursor: pointer;
+          margin-top: 15px;
+        }
+
+        .enviar:hover { background: #8a2948; }
+
+        .privacidade {
+          text-align: center;
+          color: #999;
+          font-size: 11px;
+          margin-top: 18px;
+        }
+
+        .sucesso { text-align: center; padding: 35px 0; }
+        .sucesso p { color: #777; line-height: 1.7; }
+        .coracao { color: #b78b3d; font-size: 65px; }
 
         footer {
-          color: #e9c77e;
           text-align: center;
-          font-size: 10px;
+          color: #e9c77e;
+          font-size: 11px;
           letter-spacing: 2px;
         }
+        footer p { color: #ffffffa0; letter-spacing: 1px; }
 
-        footer span { font-weight: bold; }
-
-        footer p {
-          color: #ffffffa0;
-          letter-spacing: 1px;
-        }
-
-        @media(max-width: 480px) {
-          .painel { padding: 38px 17px; }
+        @media(max-width:480px) {
+          .painel { padding: 30px 19px; }
+          h1 { font-size: 35px; }
           .assinatura { font-size: 8px; letter-spacing: 1px; }
-          .opcoes { gap: 5px; }
-          .opcao { padding: 13px 2px; }
-          .emoji { font-size: 27px; }
-          .legenda { font-size: 9px; }
         }
       `}</style>
     </main>
