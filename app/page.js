@@ -1,591 +1,224 @@
-
 "use client";
 
 import { useState } from "react";
 
-const criterios = [
-  ["pizza", "Experiência com a pizza", "O conjunto da sua experiência"],
-  ["massa", "Massa artesanal", "Textura, leveza e assamento"],
-  ["recheio", "Recheio e ingredientes", "Qualidade e generosidade"],
-  ["sabor", "Sabor", "O sabor que fica na memória"],
-  ["atendimento", "Nosso atendimento", "A atenção da nossa equipe"],
-  ["agilidade", "Tempo de espera", "Agilidade no preparo e entrega"]
+/* ===== AJUSTE AQUI ===== */
+// Rota que já recebe as avaliações no seu projeto (mantenha a atual, se for diferente).
+const ENDPOINT = "/api/avaliacoes";
+// Sabores exibidos. Edite à vontade.
+const SABORES = ["Margherita", "Calabresa", "Quatro Queijos", "Portuguesa", "Frango com Catupiry", "Marguerita Especial"];
+/* ======================= */
+
+const CRITERIOS = [
+  { id: "massa", nome: "Massa" },
+  { id: "recheio", nome: "Recheio" },
+  { id: "sabor", nome: "Sabor" },
+  { id: "apresentacao", nome: "Apresentação" },
+  { id: "atendimento", nome: "Atendimento" },
 ];
+const NOTAS = ["", "Precisa melhorar", "Poderia ser melhor", "Bom", "Muito bom", "Perfeito!"];
+const ESPERA = ["Muito rápido", "Dentro do esperado", "Demorou um pouco", "Demorou demais"];
+const VOLTARIA = ["Com certeza", "Talvez", "Provavelmente não"];
 
-const sabores = [
-  "Margherita",
-  "Calabresa",
-  "Frango com Catupiry",
-  "Portuguesa",
-  "Quatro queijos",
-  "Milho",
-  "Camarão",
-  "Outro sabor"
-];
+function Estrela() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 2.6l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4 6.1 20.6l1.2-6.5L2.5 9.5l6.6-.9z" strokeLinejoin="round" />
+    </svg>
+  );
+}
 
-export default function Home() {
-  const [etapa, setEtapa] = useState(0);
-  const [notas, setNotas] = useState({});
-  const [sabor, setSabor] = useState("");
-  const [nome, setNome] = useState("");
-  const [comentario, setComentario] = useState("");
-  const [voltaria, setVoltaria] = useState("");
-  const [enviado, setEnviado] = useState(false);
+function Estrelas({ valor, onChange, nome }) {
+  const [pop, setPop] = useState(0);
+  return (
+    <div className="estrelas" role="radiogroup" aria-label={`Nota para ${nome}`}>
+      {[1, 2, 3, 4, 5].map((n) => (
+        <button
+          key={n}
+          type="button"
+          role="radio"
+          aria-checked={valor === n}
+          aria-label={`${n} de 5`}
+          className={`estrela ${n <= valor ? "on" : ""} ${pop === n ? "pop" : ""}`}
+          onClick={() => { onChange(n); setPop(n); setTimeout(() => setPop(0), 450); }}
+        >
+          <Estrela />
+        </button>
+      ))}
+    </div>
+  );
+}
 
-  function avancar() {
-    if (etapa === 0 && !sabor) {
-      alert("Selecione o sabor da pizza.");
-      return;
+function Chips({ opcoes, valor, onChange }) {
+  return (
+    <div className="chips">
+      {opcoes.map((o) => (
+        <button key={o} type="button" className="chip" aria-pressed={valor === o} onClick={() => onChange(o)}>
+          {o}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export default function Page() {
+  const [etapa, setEtapa] = useState(0); // 0 boas-vindas · 1-4 formulário · 5 obrigado
+  const [dir, setDir] = useState("avanca");
+  const [enviando, setEnviando] = useState(false);
+  const [erro, setErro] = useState("");
+  const [d, setD] = useState({
+    sabor: "", outroSabor: "", nome: "", notas: {}, espera: "", voltaria: "", comentario: "",
+  });
+
+  const set = (k, v) => setD((p) => ({ ...p, [k]: v }));
+  const saborFinal = d.sabor === "Outro" ? d.outroSabor.trim() : d.sabor;
+
+  const valido = {
+    1: !!saborFinal,
+    2: CRITERIOS.every((c) => d.notas[c.id]),
+    3: !!d.espera && !!d.voltaria,
+    4: true,
+  };
+
+  const ir = (n) => { setDir(n > etapa ? "avanca" : "volta"); setErro(""); setEtapa(n); };
+
+  async function enviar() {
+    setEnviando(true); setErro("");
+    const payload = {
+      sabor: saborFinal,
+      nome: d.nome.trim() || null,
+      massa: d.notas.massa,
+      recheio: d.notas.recheio,
+      sabor_nota: d.notas.sabor,
+      apresentacao: d.notas.apresentacao,
+      atendimento: d.notas.atendimento,
+      tempo_espera: d.espera,
+      voltaria: d.voltaria,
+      comentario: d.comentario.trim(),
+    };
+    try {
+      const r = await fetch(ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      if (!r.ok) throw new Error();
+      ir(5);
+    } catch {
+      setErro("Não conseguimos enviar agora. Confira sua conexão e toque em enviar de novo.");
+    } finally {
+      setEnviando(false);
     }
-    if (etapa === 1 && criterios.some(c => !notas[c[0]])) {
-      alert("Avalie todos os itens antes de continuar.");
-      return;
-    }
-    setEtapa(etapa + 1);
   }
 
-  function finalizar() {
-    if (!voltaria) {
-      alert("Responda se voltaria à Iaiá.");
-      return;
-    }
-    setEnviado(true);
+  function reiniciar() {
+    setD({ sabor: "", outroSabor: "", nome: "", notas: {}, espera: "", voltaria: "", comentario: "" });
+    setDir("volta"); setEtapa(0);
   }
+
+  const primeiroNome = d.nome.trim().split(" ")[0];
 
   return (
-    <main className="experience">
-      <div className="ornamento ornamento1" />
-      <div className="ornamento ornamento2" />
+    <main className="app">
+      <div className="palco">
+        {/* ---------- BOAS-VINDAS ---------- */}
+        {etapa === 0 && (
+          <section className="obrigado" style={{ animation: "none" }}>
+            <div className="logo entrada" role="img" aria-label="Iaiá Pizzaria Artesanal" />
+            <h1>Como foi a sua noite na Iaiá?</h1>
+            <p className="sub centro">Leva menos de um minuto e ajuda a gente a assar uma pizza ainda melhor.</p>
+            <button className="btn principal grande" onClick={() => ir(1)}>Começar avaliação</button>
+          </section>
+        )}
 
-      <header className="header">
-        <div>
-          <div className="brand">Iaiá<span>.</span></div>
-          <div className="brand-sub">PIZZARIA ARTESANAL</div>
-        </div>
-        <div className="header-right">
-          <span>UMA EXPERIÊNCIA ESPECIAL</span>
-          <div className="gold-line" />
-        </div>
-      </header>
-
-      <section className="main-content">
-        {!enviado ? (
+        {/* ---------- FORMULÁRIO ---------- */}
+        {etapa >= 1 && etapa <= 4 && (
           <>
-            <div className="intro">
-              <div className="eyebrow">
-                <span>✦</span> IAIÁ EXPERIENCE <span>✦</span>
-              </div>
-              <h1>
-                Cada detalhe<br />
-                tem <i>sabor.</i>
-              </h1>
-              <p>
-                Queremos conhecer sua experiência.
-                Sua opinião inspira tudo aquilo que fazemos.
-              </p>
+            <div className="logo pequena" role="img" aria-label="Iaiá Pizzaria Artesanal" style={{ alignSelf: "center" }} />
+            <div className="fatias" aria-label={`Etapa ${etapa} de 4`}>
+              {[1, 2, 3, 4].map((n) => (
+                <span key={n} className={`fatia ${n < etapa ? "on" : n === etapa ? "atual" : ""}`} />
+              ))}
             </div>
 
-            <div className="survey">
-              <div className="survey-top">
-                <div>
-                  <span className="muted-label">SUA AVALIAÇÃO</span>
-                  <h2>
-                    {etapa === 0 && "Vamos nos conhecer?"}
-                    {etapa === 1 && "Conte como foi"}
-                    {etapa === 2 && "Sua opinião importa"}
-                  </h2>
-                </div>
-                <div className="step-number">
-                  <strong>0{etapa + 1}</strong>
-                  <span>/ 03</span>
-                </div>
-              </div>
-
-              <div className="progress">
-                <div style={{ width: `${(etapa + 1) * 33.333}%` }} />
-              </div>
-
-              {etapa === 0 && (
-                <div className="form-content">
-                  <div className="section-label">01 — SUA EXPERIÊNCIA</div>
-                  <h3>Qual foi sua escolha?</h3>
-                  <p className="help">Queremos saber qual sabor passou pela sua mesa.</p>
-
-                  <div className="flavors">
-                    {sabores.map((s, i) => (
-                      <button
-                        key={s}
-                        className={sabor === s ? "flavor active" : "flavor"}
-                        onClick={() => setSabor(s)}
-                      >
-                        <span className="flavor-number">0{i + 1}</span>
-                        {s}
-                        <span className="check">{sabor === s ? "✓" : "＋"}</span>
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="field">
-                    <label>Como podemos chamar você?</label>
-                    <input
-                      value={nome}
-                      onChange={e => setNome(e.target.value)}
-                      placeholder="Seu nome (opcional)"
-                    />
-                  </div>
-
-                  <button className="next" onClick={avancar}>
-                    CONTINUAR <span>→</span>
-                  </button>
-                </div>
-              )}
-
+            <section className={`cartao ${dir}`} key={etapa}>
               {etapa === 1 && (
-                <div className="form-content">
-                  <div className="section-label">02 — NOSSA QUALIDADE</div>
-                  <h3>Seu olhar faz a diferença.</h3>
-                  <p className="help">Toque nas estrelas para avaliar cada experiência.</p>
-
-                  {criterios.map((c, index) => (
-                    <div className="rating" key={c[0]}>
-                      <div className="rating-heading">
-                        <div>
-                          <span className="rating-index">0{index + 1}</span>
-                          <strong>{c[1]}</strong>
-                          <p>{c[2]}</p>
-                        </div>
-                        <span className="rating-value">
-                          {notas[c[0]] ? `${notas[c[0]]}/5` : "—"}
-                        </span>
-                      </div>
-                      <div className="stars">
-                        {[1,2,3,4,5].map(n => (
-                          <button
-                            key={n}
-                            className={n <= (notas[c[0]] || 0) ? "star chosen" : "star"}
-                            onClick={() => setNotas({ ...notas, [c[0]]: n })}
-                            aria-label={`Nota ${n}`}
-                          >★</button>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-
-                  <div className="buttons">
-                    <button className="back" onClick={() => setEtapa(0)}>← VOLTAR</button>
-                    <button className="next" onClick={avancar}>CONTINUAR →</button>
-                  </div>
-                </div>
+                <>
+                  <h2>Qual pizza você provou?</h2>
+                  <p className="sub">Escolha o sabor que veio à sua mesa.</p>
+                  <Chips opcoes={[...SABORES, "Outro"]} valor={d.sabor} onChange={(v) => set("sabor", v)} />
+                  {d.sabor === "Outro" && (
+                    <input className="campo" style={{ marginTop: 12 }} placeholder="Qual sabor?" value={d.outroSabor}
+                      onChange={(e) => set("outroSabor", e.target.value)} autoFocus />
+                  )}
+                  <label className="rotulo" htmlFor="nome">Seu nome <small>(opcional)</small></label>
+                  <input id="nome" className="campo" placeholder="Como podemos te chamar?" value={d.nome}
+                    onChange={(e) => set("nome", e.target.value)} autoComplete="given-name" />
+                </>
               )}
 
               {etapa === 2 && (
-                <div className="form-content">
-                  <div className="section-label">03 — SUA VOZ</div>
-                  <h3>Queremos ouvir você.</h3>
-                  <p className="help">Uma sugestão pode fazer nossa próxima experiência ainda melhor.</p>
-
-                  <div className="field">
-                    <label>Você voltaria à Iaiá?</label>
-                    <div className="choices">
-                      {["Com certeza!", "Talvez", "Não"].map(v => (
-                        <button
-                          key={v}
-                          className={voltaria === v ? "choice selected" : "choice"}
-                          onClick={() => setVoltaria(v)}
-                        >{v}</button>
-                      ))}
+                <>
+                  <h2>Dê sua nota</h2>
+                  <p className="sub">Toque nas estrelas para cada item.</p>
+                  {CRITERIOS.map((c) => (
+                    <div className="item" key={c.id}>
+                      <div className="item-topo">
+                        <span className="item-nome">{c.nome}</span>
+                        <span className="item-dica">{NOTAS[d.notas[c.id] || 0]}</span>
+                      </div>
+                      <Estrelas nome={c.nome} valor={d.notas[c.id] || 0}
+                        onChange={(n) => set("notas", { ...d.notas, [c.id]: n })} />
                     </div>
-                  </div>
-
-                  <div className="field">
-                    <label>Deixe uma mensagem para nós</label>
-                    <textarea
-                      rows={5}
-                      maxLength={1000}
-                      value={comentario}
-                      onChange={e => setComentario(e.target.value)}
-                      placeholder="O que você amou? O que podemos melhorar?"
-                    />
-                    <span className="counter">{comentario.length}/1000</span>
-                  </div>
-
-                  <div className="buttons">
-                    <button className="back" onClick={() => setEtapa(1)}>← VOLTAR</button>
-                    <button className="next" onClick={finalizar}>FINALIZAR →</button>
-                  </div>
-                </div>
+                  ))}
+                </>
               )}
-            </div>
 
-            <div className="bottom-note">
-              <span>✦</span> Obrigado por fazer parte da nossa história.
-            </div>
+              {etapa === 3 && (
+                <>
+                  <h2>Tempo de espera</h2>
+                  <p className="sub">Do pedido até a pizza chegar à mesa.</p>
+                  <Chips opcoes={ESPERA} valor={d.espera} onChange={(v) => set("espera", v)} />
+                  <span className="rotulo" style={{ marginTop: 28 }}>Você voltaria à Iaiá?</span>
+                  <Chips opcoes={VOLTARIA} valor={d.voltaria} onChange={(v) => set("voltaria", v)} />
+                </>
+              )}
+
+              {etapa === 4 && (
+                <>
+                  <h2>Quer nos contar mais?</h2>
+                  <p className="sub">Elogios, ideias e sugestões são bem-vindos.</p>
+                  <label className="rotulo" htmlFor="coment" style={{ position: "absolute", left: -9999 }}>Comentários</label>
+                  <textarea id="coment" className="campo" placeholder="Escreva aqui o que quiser…" maxLength={800}
+                    value={d.comentario} onChange={(e) => set("comentario", e.target.value)} />
+                </>
+              )}
+
+              {erro && <p className="erro" role="alert">{erro}</p>}
+
+              <div className="acoes">
+                <button className="btn fantasma" onClick={() => ir(etapa - 1)}>Voltar</button>
+                {etapa < 4 ? (
+                  <button className="btn principal" disabled={!valido[etapa]} onClick={() => ir(etapa + 1)}>Continuar</button>
+                ) : (
+                  <button className="btn principal" disabled={enviando} onClick={enviar}>
+                    {enviando ? "Enviando…" : "Enviar avaliação"}
+                  </button>
+                )}
+              </div>
+            </section>
           </>
-        ) : (
-          <div className="thank-you">
-            <div className="thank-symbol">✦</div>
-            <div className="eyebrow">COM CARINHO, IAIÁ</div>
-            <h1>Obrigado{nome ? `, ${nome}` : ""}.<br /><i>Você é especial.</i></h1>
-            <p>
-              Sua opinião foi recebida nesta demonstração.
-              Será sempre um prazer receber você novamente.
-            </p>
-            <div className="thank-divider">✦</div>
-            <div className="brand">Iaiá<span>.</span></div>
-            <button className="next restart" onClick={() => {
-              setEtapa(0);
-              setNotas({});
-              setSabor("");
-              setNome("");
-              setComentario("");
-              setVoltaria("");
-              setEnviado(false);
-            }}>NOVA AVALIAÇÃO</button>
-          </div>
         )}
-      </section>
 
-      <footer className="footer">
-        <span>IAIÁ PIZZARIA ARTESANAL</span>
-        <span>FEITO COM CARINHO ♥</span>
-      </footer>
+        {/* ---------- AGRADECIMENTO ---------- */}
+        {etapa === 5 && (
+          <section className="obrigado">
+            <span className="fatia" aria-hidden="true" />
+            <h1>{primeiroNome ? `Obrigada, ${primeiroNome}!` : "Muito obrigada!"}</h1>
+            <p className="sub centro">Sua opinião foi para a nossa cozinha. A Iaiá agradece e espera você de volta à mesa.</p>
+            <div className="logo" role="img" aria-label="Iaiá Pizzaria Artesanal" />
+            <button className="btn fantasma" style={{ marginTop: 8 }} onClick={reiniciar}>Nova avaliação</button>
+          </section>
+        )}
 
-      <style jsx global>{`
-        * { box-sizing: border-box; }
-        body { margin: 0; }
-        button, input, textarea { font-family: inherit; }
-
-        .experience {
-          min-height: 100vh;
-          background: #3a101e;
-          color: #fff;
-          font-family: Arial, sans-serif;
-          padding: 30px 22px;
-          position: relative;
-          overflow: hidden;
-        }
-
-        .ornamento {
-          position: absolute;
-          border: 1px solid #d5b36b20;
-          border-radius: 50%;
-          pointer-events: none;
-        }
-        .ornamento1 {
-          width: 450px; height: 450px;
-          top: 80px; left: -300px;
-        }
-        .ornamento2 {
-          width: 650px; height: 650px;
-          bottom: -400px; right: -350px;
-        }
-
-        .header {
-          max-width: 1050px;
-          margin: auto;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          position: relative;
-          z-index: 1;
-        }
-        .brand {
-          font: bold 48px Georgia, serif;
-          letter-spacing: -3px;
-          color: #fff8ed;
-        }
-        .brand span { color: #d7b16a; }
-        .brand-sub {
-          color: #d7b16a;
-          letter-spacing: 3px;
-          font-size: 8px;
-          margin-top: -3px;
-        }
-        .header-right {
-          color: #d7b16a;
-          font-size: 9px;
-          letter-spacing: 2px;
-          text-align: right;
-        }
-        .gold-line {
-          width: 75px;
-          height: 1px;
-          background: #d7b16a;
-          margin: 10px 0 0 auto;
-        }
-
-        .main-content {
-          max-width: 650px;
-          margin: 45px auto;
-          position: relative;
-          z-index: 1;
-        }
-        .intro { text-align: center; margin-bottom: 32px; }
-        .eyebrow {
-          color: #d7b16a;
-          letter-spacing: 4px;
-          font-size: 9px;
-          font-weight: bold;
-        }
-        .intro h1, .thank-you h1 {
-          font: 57px/1.08 Georgia, serif;
-          color: #fff8ed;
-          margin: 19px 0 13px;
-        }
-        .intro h1 i, .thank-you h1 i {
-          color: #dfc18a;
-          font-weight: normal;
-        }
-        .intro p {
-          color: #d3bdba;
-          font: 14px/1.7 Georgia, serif;
-          max-width: 380px;
-          margin: auto;
-        }
-
-        .survey {
-          background: #fbf7f0;
-          color: #461625;
-          border-radius: 4px;
-          padding: 35px 38px;
-          box-shadow: 0 25px 80px #16050b70;
-        }
-        .survey-top {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-        .muted-label {
-          color: #ad8950;
-          font-size: 9px;
-          letter-spacing: 2px;
-        }
-        .survey-top h2 {
-          font: 27px Georgia, serif;
-          margin: 8px 0;
-        }
-        .step-number strong {
-          color: #8d5e36;
-          font: 31px Georgia, serif;
-        }
-        .step-number span {
-          color: #a99c8c;
-          font-size: 12px;
-        }
-        .progress {
-          background: #e9dfd2;
-          height: 2px;
-          margin: 20px 0 30px;
-        }
-        .progress div {
-          height: 2px;
-          background: #b18a4c;
-          transition: width .35s;
-        }
-        .section-label {
-          color: #a27a40;
-          font-size: 9px;
-          letter-spacing: 2px;
-          font-weight: bold;
-        }
-        .form-content h3 {
-          font: 27px Georgia, serif;
-          margin: 12px 0 7px;
-        }
-        .help {
-          color: #93877b;
-          font: 13px/1.6 Georgia, serif;
-          margin-bottom: 24px;
-        }
-
-        .flavors {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 9px;
-        }
-        .flavor {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          text-align: left;
-          padding: 14px 10px;
-          background: #fffdf9;
-          border: 1px solid #e9dfd3;
-          color: #522438;
-          font-size: 12px;
-          cursor: pointer;
-          transition: .2s;
-        }
-        .flavor.active {
-          border-color: #b18a4c;
-          background: #f5ecdc;
-        }
-        .flavor-number {
-          color: #b18a4c;
-          font: 12px Georgia, serif;
-        }
-        .check {
-          margin-left: auto;
-          color: #a47c40;
-        }
-
-        .field { margin: 25px 0; }
-        .field label {
-          display: block;
-          font: 16px Georgia, serif;
-          margin-bottom: 11px;
-          color: #522438;
-        }
-        .field input, .field textarea {
-          width: 100%;
-          background: #fffdf9;
-          border: 1px solid #e7ddd1;
-          padding: 15px;
-          border-radius: 2px;
-          color: #522438;
-          font-size: 13px;
-          outline-color: #b18a4c;
-        }
-        .field textarea { resize: vertical; line-height: 1.6; }
-
-        .rating {
-          padding: 19px 0;
-          border-bottom: 1px solid #e9dfd3;
-        }
-        .rating-heading {
-          display: flex;
-          justify-content: space-between;
-          gap: 10px;
-        }
-        .rating-heading strong {
-          font: 15px Georgia, serif;
-          color: #522438;
-        }
-        .rating-index {
-          color: #b18a4c;
-          font: 11px Georgia, serif;
-          margin-right: 9px;
-        }
-        .rating-heading p {
-          color: #998d81;
-          font-size: 10px;
-          margin: 6px 0 0 27px;
-        }
-        .rating-value { color: #a17a42; font: 13px Georgia, serif; }
-        .stars { display: flex; gap: 9px; margin: 12px 0 0 25px; }
-        .star {
-          color: #ded4c6;
-          background: none;
-          border: 0;
-          font-size: 29px;
-          padding: 0;
-          cursor: pointer;
-          transition: transform .2s, color .2s;
-        }
-        .star.chosen { color: #bd944d; }
-        .star:hover { transform: scale(1.18); }
-
-        .choices { display: flex; gap: 8px; flex-wrap: wrap; }
-        .choice {
-          flex: 1;
-          min-width: 90px;
-          padding: 13px 8px;
-          border: 1px solid #e7ddd1;
-          color: #522438;
-          background: #fffdf9;
-          cursor: pointer;
-          font-size: 12px;
-        }
-        .choice.selected {
-          background: #f1e7d5;
-          border-color: #b18a4c;
-        }
-        .counter {
-          display: block;
-          text-align: right;
-          color: #a99c8c;
-          font-size: 10px;
-          margin-top: 7px;
-        }
-
-        .buttons { display: flex; gap: 10px; margin-top: 25px; }
-        .next, .back {
-          padding: 16px 18px;
-          font-size: 10px;
-          letter-spacing: 1.5px;
-          cursor: pointer;
-        }
-        .next {
-          flex: 1;
-          border: 0;
-          color: white;
-          background: #52192e;
-          transition: .2s;
-        }
-        .next:hover { background: #7a3049; }
-        .back {
-          border: 1px solid #d9c9b6;
-          background: transparent;
-          color: #6a3444;
-        }
-
-        .bottom-note {
-          text-align: center;
-          color: #dfc18a;
-          font: italic 13px Georgia, serif;
-          margin-top: 25px;
-        }
-        .bottom-note span { color: #d7b16a; }
-
-        .thank-you {
-          background: #fbf7f0;
-          color: #461625;
-          text-align: center;
-          padding: 65px 30px;
-          box-shadow: 0 25px 80px #16050b70;
-        }
-        .thank-symbol {
-          color: #bd944d;
-          font-size: 65px;
-          margin: 30px;
-        }
-        .thank-you h1 { color: #522438; font-size: 43px; }
-        .thank-you p {
-          color: #93877b;
-          font: 15px/1.8 Georgia, serif;
-          max-width: 380px;
-          margin: 20px auto;
-        }
-        .thank-divider { color: #bd944d; margin: 35px; }
-        .thank-you .brand { color: #522438; font-size: 42px; }
-        .restart { display: block; width: 100%; margin-top: 30px; }
-
-        .footer {
-          max-width: 1050px;
-          width: 100%;
-          margin: auto auto 0;
-          display: flex;
-          justify-content: space-between;
-          color: #cdb17d;
-          font-size: 8px;
-          letter-spacing: 2px;
-          position: relative;
-          z-index: 1;
-        }
-
-        @media(max-width: 520px) {
-          .experience { padding: 22px 13px; }
-          .brand { font-size: 40px; }
-          .header-right { font-size: 7px; letter-spacing: 1px; }
-          .main-content { margin: 38px auto; }
-          .intro h1 { font-size: 48px; }
-          .survey { padding: 27px 19px; }
-          .survey-top h2 { font-size: 23px; }
-          .form-content h3 { font-size: 24px; }
-          .flavors { grid-template-columns: 1fr; }
-          .footer { font-size: 7px; letter-spacing: 1px; }
-        }
-      `}</style>
+        <p className="rodape">Iaiá Pizzaria Artesanal</p>
+      </div>
     </main>
   );
 }
